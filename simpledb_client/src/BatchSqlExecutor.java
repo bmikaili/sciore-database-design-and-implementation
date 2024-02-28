@@ -16,8 +16,7 @@ public class BatchSqlExecutor {
 
     String filePath = args[0];
 
-    NetworkDataSource dataSource = new NetworkDataSource("<host_name_here>"); // Replace <host_name_here> with actual
-                                                                              // host
+    NetworkDataSource dataSource = new NetworkDataSource("localhost");
 
     try (Connection conn = dataSource.getConnection()) {
       executeSqlCommandsFromFile(filePath, conn);
