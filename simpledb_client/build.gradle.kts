@@ -3,6 +3,7 @@ plugins { java }
 group = "com.yourdomain.simpledb.client"
 
 version = "1.0-SNAPSHOT"
+sourceSets { main { java { srcDirs("src") } } }
 
 repositories { mavenCentral() }
 

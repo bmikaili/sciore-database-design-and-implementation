@@ -7,27 +7,43 @@ public class SimpleIJ {
   public static void main(String[] args) {
     Scanner sc = new Scanner(System.in);
     System.out.println("Connect> ");
-    String s = sc.nextLine();
-    Driver d = (s.contains("//")) ? new NetworkDriver() : new EmbeddedDriver();
+    String connectionString = sc.nextLine();
+    Driver d = (connectionString.contains("//")) ? new NetworkDriver() : new EmbeddedDriver();
 
-    try (Connection conn = d.connect(s, null);
+    try (Connection conn = d.connect(connectionString, null);
         Statement stmt = conn.createStatement()) {
+      StringBuilder commandBuilder = new StringBuilder();
       System.out.print("\nSQL> ");
       while (sc.hasNextLine()) {
         // process one line of input
-        String cmd = sc.nextLine().trim();
-        if (cmd.startsWith("exit"))
+        String line = sc.nextLine().trim();
+        if (line.equals("exit")) {
           break;
-        else if (cmd.startsWith("select"))
-          doQuery(stmt, cmd);
-        else
-          doUpdate(stmt, cmd);
-        System.out.print("\nSQL> ");
+        }
+        // Skip comments and empty lines
+        if (!line.startsWith("--") && !line.isEmpty()) {
+          commandBuilder.append(line);
+          // End of SQL statement
+          if (line.endsWith(";")) {
+            String cmd = commandBuilder.toString();
+            // Remove the semicolon
+            cmd = cmd.substring(0, cmd.length() - 1).trim();
+            if (cmd.toLowerCase().startsWith("select")) {
+              doQuery(stmt, cmd);
+            } else {
+              doUpdate(stmt, cmd);
+            }
+            // Reset the command builder for the next SQL statement
+            commandBuilder.setLength(0);
+            System.out.print("\nSQL> ");
+          }
+        }
       }
     } catch (SQLException e) {
       e.printStackTrace();
+    } finally {
+      sc.close();
     }
-    sc.close();
   }
 
   private static void doQuery(Statement stmt, String cmd) {
