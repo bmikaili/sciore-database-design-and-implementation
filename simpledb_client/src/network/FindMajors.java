@@ -2,6 +2,11 @@ package network;
 
 import java.sql.*;
 
+import java.awt.BorderLayout;
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+
 import simpledb.jdbc.network.NetworkDriver;
 
 public class FindMajors {
@@ -12,32 +17,35 @@ public class FindMajors {
     }
     String major = args[0];
 
-    System.out.println("Here are the " + major + " majors");
-    System.out.println("Name\tGradYear");
-
     String qry = "select sname, gradyear "
         + "from student, dept "
         + "where did = majorid "
         + "and dname = '" + major + "'";
 
     try {
+      // Register JDBC driver
       DriverManager.registerDriver(new NetworkDriver());
     } catch (SQLException e) {
-      System.err.println("Error registering driver: " + e);
       e.printStackTrace();
+      return;
     }
 
-    NetworkDataSource dataSource = new NetworkDataSource("localhost");
-
-    try (Connection conn = dataSource.getConnection();
+    try (Connection conn = DriverManager.getConnection("jdbc:simpledb://localhost");
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(qry)) {
-      while (rs.next()) {
-        String sname = rs.getString("sname");
-        int gradyear = rs.getInt("gradyear");
-        System.out.println(sname + "\t" + gradyear);
-      }
-    } catch (Exception e) {
+
+      MajorTableModel model = new MajorTableModel(rs);
+
+      JTable table = new JTable(model);
+      JScrollPane scrollPane = new JScrollPane(table);
+      JFrame frame = new JFrame("Find Majors Application");
+      frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      frame.setLayout(new BorderLayout());
+      frame.add(scrollPane, BorderLayout.CENTER);
+      frame.pack(); // Adjusts window size to fit the content
+      frame.setVisible(true);
+    } catch (SQLException e) {
+      System.err.println("SQL Exception: " + e.getMessage());
       e.printStackTrace();
     }
   }
