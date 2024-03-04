@@ -7,8 +7,6 @@ import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
-import simpledb.jdbc.network.NetworkDriver;
-
 public class FindMajors {
   public static void main(String[] args) {
     if (args.length < 1) {
@@ -22,15 +20,9 @@ public class FindMajors {
         + "where did = majorid "
         + "and dname = '" + major + "'";
 
-    try {
-      // Register JDBC driver
-      DriverManager.registerDriver(new NetworkDriver());
-    } catch (SQLException e) {
-      e.printStackTrace();
-      return;
-    }
+    NetworkDataSource dataSource = new NetworkDataSource("localhost");
 
-    try (Connection conn = DriverManager.getConnection("jdbc:simpledb://localhost");
+    try (Connection conn = dataSource.getConnection();
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(qry)) {
 

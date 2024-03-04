@@ -2,12 +2,13 @@ package network;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.logging.Logger;
 
 import javax.sql.DataSource;
+
+import simpledb.jdbc.network.NetworkDriver;
 
 public class NetworkDataSource implements DataSource {
   private String serverName;
@@ -42,7 +43,9 @@ public class NetworkDataSource implements DataSource {
   @Override
   public Connection getConnection() throws SQLException {
     String url = "jdbc:simpledb://" + serverName;
-    return DriverManager.getConnection(url);
+
+    NetworkDriver driver = new NetworkDriver();
+    return driver.connect(url, null);
   }
 
   @Override

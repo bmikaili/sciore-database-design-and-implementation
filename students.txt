@@ -1,0 +1,7 @@
+SId	SName	MajorId	GradYear
+10	Alice	30	2023
+11	Brian	10	2024
+12	Claire	20	2023
+13	David	30	2022
+14	Emma	20	2024
+15	Frank	10	2023
