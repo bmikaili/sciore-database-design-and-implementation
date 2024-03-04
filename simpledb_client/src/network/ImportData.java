@@ -13,34 +13,58 @@ public class ImportData {
     String filename = args[0];
     String tablename = args[1];
 
-    // Let's build up database URL, username and password but have them ready for
-    // your actual database connection. Make sure to modify these variables.
+    // No NetworkDataSource is provided, but assuming it is setup correctly
     NetworkDataSource ds = new NetworkDataSource("localhost");
 
     try (Connection conn = ds.getConnection();
         Statement stmt = conn.createStatement()) {
+
+      String[] columnNames;
+      if ("STUDENT".equalsIgnoreCase(tablename)) {
+        columnNames = new String[] { "SId", "SName", "MajorId", "GradYear" };
+      } else if ("DEPT".equalsIgnoreCase(tablename)) {
+        columnNames = new String[] { "DId", "DName" };
+      } else if ("COURSE".equalsIgnoreCase(tablename)) {
+        columnNames = new String[] { "CId", "Title", "DeptId" };
+      } else if ("SECTION".equalsIgnoreCase(tablename)) {
+        columnNames = new String[] { "SectId", "CourseId", "Prof", "YearOffered" };
+      } else if ("ENROLL".equalsIgnoreCase(tablename)) {
+        columnNames = new String[] { "EId", "StudentId", "SectionId", "Grade" };
+      } else {
+        throw new IllegalArgumentException("Unrecognized table name: " + tablename);
+      }
+
       Path path = Paths.get(filename);
       try (BufferedReader br = Files.newBufferedReader(path)) {
-        br.readLine(); // Skip the first line with column names
-        String line;
+        br.readLine(); // Skip header line
 
+        String line;
         while ((line = br.readLine()) != null) {
           String[] fields = line.split("\t");
-
-          if (fields.length < 4) {
-            throw new IllegalArgumentException(
-                "Invalid input format. Line should contain exactly 4 fields separated by tabs.");
+          if (fields.length != columnNames.length) {
+            System.err.println("Mismatch between column names and data fields.");
+            continue; // Skip this line/mismatched record
           }
 
-          String sql = String.format(
-              "INSERT INTO %s (SId, SName, MajorId, GradYear) VALUES (%s, '%s', %s, %s)",
-              tablename,
-              fields[0], // Assuming SId is an integer
-              fields[1], // Assuming SName is a string requiring quote wrap
-              fields[2], // Assuming MajorId is an integer
-              fields[3] // Assuming GradYear is an integer
-          );
+          StringBuilder sqlBuilder = new StringBuilder("INSERT INTO ");
+          sqlBuilder.append(tablename);
+          sqlBuilder.append(" (");
+          sqlBuilder.append(String.join(", ", columnNames));
+          sqlBuilder.append(") VALUES (");
 
+          for (int i = 0; i < fields.length; i++) {
+            if (fields[i].matches("\\d+")) {
+              sqlBuilder.append(fields[i]);
+            } else {
+              fields[i] = fields[i].replace("'", "''"); // Escape single quote as appropriate for SQL
+              sqlBuilder.append("'").append(fields[i]).append("'");
+            }
+            if (i < fields.length - 1) {
+              sqlBuilder.append(", ");
+            }
+          }
+          sqlBuilder.append(")");
+          String sql = sqlBuilder.toString();
           stmt.executeUpdate(sql);
         }
       }
