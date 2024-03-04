@@ -13,7 +13,6 @@ public class ImportData {
     String filename = args[0];
     String tablename = args[1];
 
-    // No NetworkDataSource is provided, but assuming it is setup correctly
     NetworkDataSource ds = new NetworkDataSource("localhost");
 
     try (Connection conn = ds.getConnection();
